@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IIBB Financiero por Provincia — Argentina 2025</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --surface: #f7f7f5;
+    --surface2: #efefed;
+    --border: #e4e4e0;
+    --border2: #d4d4ce;
+    --text: #1a1a18;
+    --muted: #999994;
+    --muted2: #777772;
+    --red: #c0392b;
+    --amber: #b06020;
+    --blue: #1a5fa0;
+    --green: #1e7a4a;
+    --red-soft: rgba(192,57,43,.08);
+    --green-soft: rgba(30,122,74,.08);
+    --amber-soft: rgba(176,96,32,.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  .header { margin-bottom: 1.75rem; }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    margin-bottom: .5rem;
+  }
+
+  h1 {
+    font-size: clamp(18px, 2.5vw, 26px);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: .4rem;
+  }
+
+  .subtitle { font-size: 13px; color: var(--muted2); font-weight: 400; }
+
+  .controls {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+    align-items: center;
+  }
+
+  .label-ctrl {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  .pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--muted2);
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: .02em;
+  }
+  .pill:hover { border-color: #aaa; color: var(--text); }
+  .pill.active { background: var(--surface); border-color: var(--border2); color: var(--text); font-weight: 600; }
+
+  .count-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted2);
+    margin-left: auto;
+  }
+
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead tr {
+    border-bottom: 1px solid var(--border2);
+    background: var(--surface);
+  }
+
+  th {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    padding: 10px 14px;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color .15s;
+  }
+  th:hover { color: var(--text); }
+  th.sorted { color: var(--text); }
+  th .arr { margin-left: 4px; opacity: .35; font-size: 9px; }
+  th.sorted .arr { opacity: 1; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+
+  td { padding: 10px 14px; vertical-align: middle; }
+
+  .td-rank {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 32px;
+    text-align: right;
+    padding-right: 8px;
+  }
+
+  .td-prov { font-weight: 600; font-size: 13px; min-width: 140px; }
+
+  .bar-cell { min-width: 170px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-track {
+    width: 90px;
+    height: 6px;
+    background: var(--surface2);
+    border-radius: 3px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 3px; }
+  .rate-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 40px;
+  }
+  .spread-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: .03em;
+  }
+  .tag-bruto  { background: var(--green-soft); color: var(--green); }
+  .tag-spread { background: var(--amber-soft); color: var(--amber); }
+  .tag-si     { background: var(--red-soft);   color: var(--red); }
+  .tag-no     { background: var(--surface2);   color: var(--muted2); }
+
+  .td-bool { text-align: center; }
+
+  .footer { margin-top: 1.25rem; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: .5rem;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: .03em;
+  }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  .source {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .03em;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p class="eyebrow">Impuesto sobre los ingresos brutos · Argentina 2025</p>
+  <h1>IIBB sobre actividad financiera y bancaria por provincia</h1>
+  <p class="subtitle">Alícuota, base imponible y tratamiento de títulos públicos e hipotecas. Fuente: BCRA / ADEBA, julio 2025.</p>
+</div>
+
+<div class="controls">
+  <span class="label-ctrl">Filtrar:</span>
+  <button class="pill active" data-f="all">Todas</button>
+  <button class="pill" data-f="high">Alícuota ≥ 9%</button>
+  <button class="pill" data-f="mid">7% – 9%</button>
+  <button class="pill" data-f="low">Menos del 7%</button>
+  <button class="pill" data-f="hipot">Grava hipotecarios</button>
+  <button class="pill" data-f="titulos">Grava títulos</button>
+  <span class="count-badge" id="count"></span>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:32px">#</th>
+        <th class="sortable" data-col="prov">Provincia <span class="arr">↕</span></th>
+        <th class="sortable sorted" data-col="rate">Alícuota <span class="arr">↓</span></th>
+        <th class="sortable" data-col="base">Base imponible <span class="arr">↕</span></th>
+        <th class="sortable td-bool" data-col="titulos">Grava títulos <span class="arr">↕</span></th>
+        <th class="sortable td-bool" data-col="hipot">Grava hipotec. <span class="arr">↕</span></th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="footer">
+  <div class="legend">
+    <div class="leg-item"><span class="leg-dot" style="background:#c0392b"></span>≥ 9%</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#b06020"></span>8% – 8.9%</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#1a5fa0"></span>7% – 7.9%</div>
+    <div class="leg-item"><span class="leg-dot" style="background:#1e7a4a"></span>&lt; 7%</div>
+    <div class="leg-item" style="margin-left:8px"><span class="tag tag-spread" style="font-size:9px">Spread</span> = tributa solo sobre margen neto</div>
+  </div>
+  <p class="source">BCRA / ADEBA jul-2025 · Solo actividad financiera. Las alícuotas sobre otras actividades pueden diferir.</p>
+</div>
+
+<script>
+const data = [
+  {prov:"La Pampa",            rate:9.10, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Buenos Aires",        rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Catamarca",           rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Córdoba",             rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Chubut",              rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Entre Ríos",          rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"La Rioja",            rate:9.00, base:"IIBB",   titulos:false, hipot:true},
+  {prov:"Neuquén",             rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Río Negro",           rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Santa Fe",            rate:9.00, base:"IIBB",   titulos:true,  hipot:true},
+  {prov:"Tierra del Fuego",    rate:9.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Tucumán",             rate:9.00, base:"IIBB",   titulos:true,  hipot:false},
+  {prov:"CABA",                rate:8.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Jujuy",               rate:8.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Salta",               rate:8.00, base:"IIBB",   titulos:true,  hipot:false},
+  {prov:"Santa Cruz",          rate:8.00, base:"IIBB",   titulos:false, hipot:true},
+  {prov:"Misiones",            rate:7.80, base:"IIBB",   titulos:true,  hipot:false},
+  {prov:"San Juan",            rate:7.80, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Chaco",               rate:7.70, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Mendoza",             rate:7.00, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"San Luis",            rate:6.50, base:"Spread", titulos:true,  hipot:true},
+  {prov:"Formosa",             rate:5.50, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Corrientes",          rate:4.70, base:"IIBB",   titulos:false, hipot:false},
+  {prov:"Santiago del Estero", rate:3.00, base:"Spread", titulos:false, hipot:false},
+];
+
+function barColor(r){
+  if(r>=9) return "#c0392b";
+  if(r>=8) return "#b06020";
+  if(r>=7) return "#1a5fa0";
+  return "#1e7a4a";
+}
+
+let sortCol="rate", sortDir=-1, activeF="all";
+
+function render(){
+  let rows = [...data];
+  if(activeF==="high")     rows = rows.filter(d=>d.rate>=9);
+  else if(activeF==="mid") rows = rows.filter(d=>d.rate>=7&&d.rate<9);
+  else if(activeF==="low") rows = rows.filter(d=>d.rate<7);
+  else if(activeF==="hipot")   rows = rows.filter(d=>d.hipot);
+  else if(activeF==="titulos") rows = rows.filter(d=>d.titulos);
+
+  rows.sort((a,b)=>{
+    let av,bv;
+    if(sortCol==="rate"){av=a.rate;bv=b.rate;}
+    else if(sortCol==="prov"){av=a.prov;bv=b.prov;}
+    else if(sortCol==="base"){av=a.base;bv=b.base;}
+    else if(sortCol==="titulos"){av=a.titulos?1:0;bv=b.titulos?1:0;}
+    else if(sortCol==="hipot"){av=a.hipot?1:0;bv=b.hipot?1:0;}
+    if(av<bv) return sortDir; if(av>bv) return -sortDir; return 0;
+  });
+
+  document.getElementById("count").textContent = rows.length + " provincias";
+
+  document.getElementById("tbody").innerHTML = rows.map((d,i)=>{
+    const bw = Math.round((d.rate/9.10)*100);
+    const bc = barColor(d.rate);
+    const baseTag = d.base==="Spread"
+      ? `<span class="tag tag-spread">Spread</span>`
+      : `<span class="tag tag-bruto">IIBB bruto</span>`;
+    const titulosTag = d.titulos
+      ? `<span class="tag tag-si">Sí</span>`
+      : `<span class="tag tag-no">No</span>`;
+    const hipotTag = d.hipot
+      ? `<span class="tag tag-si">Sí</span>`
+      : `<span class="tag tag-no">No</span>`;
+    return `<tr>
+      <td class="td-rank">${i+1}</td>
+      <td class="td-prov">${d.prov}</td>
+      <td class="bar-cell">
+        <div class="bar-row">
+          <div class="bar-track"><div class="bar-fill" style="width:${bw}%;background:${bc}"></div></div>
+          <span class="rate-val" style="color:${bc}">${d.rate.toFixed(2)}%</span>
+          ${d.base==="Spread"?'<span class="spread-note">(spread)</span>':''}
+        </div>
+      </td>
+      <td>${baseTag}</td>
+      <td class="td-bool">${titulosTag}</td>
+      <td class="td-bool">${hipotTag}</td>
+    </tr>`;
+  }).join("");
+}
+
+document.querySelector(".controls").addEventListener("click",e=>{
+  const btn=e.target.closest(".pill"); if(!btn) return;
+  document.querySelectorAll(".pill").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); activeF=btn.dataset.f; render();
+});
+
+document.querySelectorAll("th.sortable").forEach(th=>{
+  th.addEventListener("click",()=>{
+    const col=th.dataset.col;
+    if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=col==="prov"?1:-1;}
+    document.querySelectorAll("th.sortable").forEach(t=>{
+      t.classList.remove("sorted");
+      t.querySelector(".arr").textContent="↕";
+    });
+    th.classList.add("sorted");
+    th.querySelector(".arr").textContent=sortDir===-1?"↓":"↑";
+    render();
+  });
+});
+
+render();
+</script>
+</body>
+</html>
